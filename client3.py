@@ -17,7 +17,6 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
-
 import json
 import random
 import urllib.request
@@ -25,35 +24,43 @@ import urllib.request
 # Server API URLs
 QUERY = "http://localhost:8080/query?id={}"
 
-# 500 server request
+# 500 server requests
 N = 500
 
 
 def getDataPoint(quote):
     """ Produce all the needed values to generate a datapoint """
-    """ ------------- Update this function ------------- """
     stock = quote['stock']
     bid_price = float(quote['top_bid']['price'])
     ask_price = float(quote['top_ask']['price'])
-    price = bid_price
+    price = (bid_price + ask_price) / 2
     return stock, bid_price, ask_price, price
 
 
 def getRatio(price_a, price_b):
     """ Get ratio of price_a and price_b """
-    """ ------------- Update this function ------------- """
-    return 1
+    if price_b != 0:
+        return price_a / price_b
+    else:
+        return None
 
 
 # Main
 if __name__ == "__main__":
+    prices = {}  # Dictionary to store stock prices
+
     # Query the price once every N seconds.
-    for _ in iter(range(N)):
+    for _ in range(N):
         quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
 
-        """ ----------- Update to get the ratio --------------- """
         for quote in quotes:
             stock, bid_price, ask_price, price = getDataPoint(quote)
+            prices[stock] = price  # Store the price in the dictionary
             print("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
 
-        print("Ratio %s" % getRatio(price, price))
+        # Calculate and print the ratio for each stock
+        for stock_a in prices:
+            for stock_b in prices:
+                if stock_a != stock_b:
+                    ratio = getRatio(prices[stock_a], prices[stock_b])
+                    print("Ratio %s to %s: %s" % (stock_a, stock_b, ratio))
